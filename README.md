@@ -39,8 +39,8 @@
 
 ### ℹ Essentials
 - Visa (evisa.gov.tr), money (TRY, tipping), etiquette (mosques), emergency 112/155/153, transport, best seasons
-- Design: warm Turkish motif (flag red #c03a2b, turquoise, tile pattern), Fraunces headings, soft shadows
-- Legal: Map ODbL, Leaflet BSD, QR MIT, descriptions/phrases original, MIT
+- Design: **Bosphorus Nights** — deep navy #070b1a, gold #f59e0b → turquoise #06b6d4, glassmorphism, editorial hero, soft blur
+- Legal: Map ODbL, Leaflet BSD, QR MIT (qrcodejs), descriptions/phrases original (1-2 sentences, no copy), MIT
 
 ---
 
