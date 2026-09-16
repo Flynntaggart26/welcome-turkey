@@ -17,15 +17,32 @@ const phrases=[
   {tr:'Merhaba', en:'Hello', de:'Hallo', ru:'Привет', ar:'مرحبا', cat:'Greetings'},
   {tr:'Teşekkürler', en:'Thank you', de:'Danke', ru:'Спасибо', ar:'شكرا', cat:'Greetings'},
   {tr:'Lütfen', en:'Please', de:'Bitte', ru:'Пожалуйста', ar:'من فضلك', cat:'Greetings'},
+  {tr:'Günaydın', en:'Good morning', de:'Guten Morgen', ru:'Доброе утро', ar:'صباح الخير', cat:'Greetings'},
+  {tr:'İyi akşamlar', en:'Good evening', de:'Guten Abend', ru:'Добрый вечер', ar:'مساء الخير', cat:'Greetings'},
+  {tr:'Affedersiniz', en:'Excuse me', de:'Entschuldigung', ru:'Извините', ar:'عذرا', cat:'Greetings'},
+  {tr:'Anlamadım', en:'I don\'t understand', de:'Ich verstehe nicht', ru:'Я не понимаю', ar:'لم أفهم', cat:'Greetings'},
+  {tr:'İngilizce biliyor musunuz?', en:'Do you speak English?', de:'Sprechen Sie Englisch?', ru:'Вы говорите по-английски?', ar:'هل تتحدث الإنجليزية؟', cat:'Greetings'},
   {tr:'Ne kadar?', en:'How much?', de:'Wie viel?', ru:'Сколько?', ar:'بكم؟', cat:'Shopping'},
+  {tr:'Çok pahalı', en:'Too expensive', de:'Zu teuer', ru:'Слишком дорого', ar:'غالي جدا', cat:'Shopping'},
+  {tr:'İndirim yapar mısınız?', en:'Discount?', de:'Rabatt?', ru:'Скидка?', ar:'خصم؟', cat:'Shopping'},
   {tr:'Bilet nerede?', en:'Where is ticket?', de:'Wo ist Ticket?', ru:'Где билет?', ar:'أين التذكرة؟', cat:'Transport'},
   {tr:'Tuvalet nerede?', en:'Where is toilet?', de:'Wo ist Toilette?', ru:'Где туалет?', ar:'أين الحمام؟', cat:'Transport'},
+  {tr:'Otobüs nerede?', en:'Where is the bus?', de:'Wo ist der Bus?', ru:'Где автобус?', ar:'أين الحافلة؟', cat:'Transport'},
+  {tr:'Taksi çağırır mısınız?', en:'Can you call a taxi?', de:'Taxi bitte', ru:'Вызовите такси', ar:'اتصل بسيارة أجرة', cat:'Transport'},
+  {tr:'Havalimanı nerede?', en:'Where is the airport?', de:'Wo ist Flughafen?', ru:'Где аэропорт?', ar:'أين المطار؟', cat:'Transport'},
   {tr:'Su alabilir miyim?', en:'Can I get water?', de:'Wasser bitte', ru:'Можно воды?', ar:'ماء من فضلك', cat:'Food'},
   {tr:'Vejetaryenim', en:'I am vegetarian', de:'Ich bin Vegetarier', ru:'Я вегетарианец', ar:'أنا نباتي', cat:'Food'},
+  {tr:'Hesap lütfen', en:'Bill please', de:'Rechnung bitte', ru:'Счёт пожалуйста', ar:'الحساب من فضلك', cat:'Food'},
+  {tr:'Çok lezzetli', en:'Very delicious', de:'Sehr lecker', ru:'Очень вкусно', ar:'لذيذ جدا', cat:'Food'},
+  {tr:'Acısız olsun', en:'Not spicy please', de:'Nicht scharf', ru:'Не остро', ar:'بدون حار', cat:'Food'},
   {tr:'Yardım edin!', en:'Help!', de:'Hilfe!', ru:'Помогите!', ar:'ساعدوني!', cat:'Emergency'},
   {tr:'Hastane nerede?', en:'Where is hospital?', de:'Wo ist Krankenhaus?', ru:'Где больница?', ar:'أين المستشفى؟', cat:'Emergency'},
-  {tr:'İndirim yapar mısınız?', en:'Discount?', de:'Rabatt?', ru:'Скидка?', ar:'خصم؟', cat:'Shopping'},
+  {tr:'Polis nerede?', en:'Where is police?', de:'Wo ist Polizei?', ru:'Где полиция?', ar:'أين الشرطة؟', cat:'Emergency'},
+  {tr:'Kayboldum', en:'I am lost', de:'Ich habe mich verlaufen', ru:'Я потерялся', ar:'لقد ضعت', cat:'Emergency'},
+  {tr:'Otelim nerede?', en:'Where is my hotel?', de:'Wo ist mein Hotel?', ru:'Где мой отель?', ar:'أين فندقي؟', cat:'Emergency'},
   {tr:'Çok güzel!', en:'Very beautiful!', de:'Sehr schön!', ru:'Очень красиво!', ar:'جميل جدا!', cat:'Greetings'},
+  {tr:'Harika!', en:'Wonderful!', de:'Wunderbar!', ru:'Замечательно!', ar:'رائع!', cat:'Greetings'},
+  {tr:'Güle güle', en:'Goodbye', de:'Auf Wiedersehen', ru:'До свидания', ar:'وداعا', cat:'Greetings'},
 ];
 const foodData=[
   {name:'Baklava', region:'Gaziantep', desc:'Layers of phyllo with pistachio and syrup.', allergens:['nuts','gluten','dairy'], price:'80-120 TRY'},
@@ -166,11 +183,82 @@ function renderPhrases(){
     list.appendChild(row);
   });
 }
-function speak(text){
+let voices=[];
+function loadVoices(){
+  voices=speechSynthesis.getVoices();
+}
+if('speechSynthesis' in window){
+  loadVoices();
+  speechSynthesis.onvoiceschanged=loadVoices;
+}
+function getBestVoice(lang){
+  if(!voices.length) loadVoices();
+  const pref=['Google','Natural','Premium','Neural','Microsoft','Samantha','Yelda','Emel'];
+  let list=voices.filter(v=> v.lang.toLowerCase().startsWith(lang.toLowerCase().slice(0,2)));
+  if(!list.length) list=voices;
+  // prefer natural/premium
+  for(let p of pref){
+    const f=list.find(v=> v.name.includes(p));
+    if(f) return f;
+  }
+  // longest name often is most specific, fallback first
+  return list[0];
+}
+function speak(text, targetLang){
   if(!('speechSynthesis' in window)) return;
   const u=new SpeechSynthesisUtterance(text);
-  u.lang='tr-TR'; u.rate=0.9;
-  speechSynthesis.cancel(); speechSynthesis.speak(u);
+  // auto-detect lang if not given: Turkish phrases keep tr-TR, otherwise use selected lang
+  const langMap={tr:'tr-TR', en:'en-US', de:'de-DE', ru:'ru-RU', ar:'ar-SA'};
+  let useLang='tr-TR';
+  if(targetLang && langMap[targetLang]) useLang=langMap[targetLang];
+  else if(targetLang) useLang=targetLang;
+  u.lang=useLang;
+  u.rate=0.92; u.pitch=1.02; u.volume=1.0;
+  const v=getBestVoice(useLang);
+  if(v) u.voice=v;
+  speechSynthesis.cancel();
+  // small delay to let cancel take effect, more natural
+  setTimeout(()=> speechSynthesis.speak(u), 60);
+}
+function speakWithLang(trText){
+  // speak Turkish phrase naturally, then translation in selected lang
+  speak(trText, 'tr');
+  if(lang!=='tr'){
+    const ph=phrases.find(p=> p.tr.toLowerCase()===trText.toLowerCase());
+    if(ph && ph[lang]){
+      setTimeout(()=> speak(ph[lang], lang), 900);
+    }
+  }
+}
+// Conversation mode — hold to speak Turkish, translate to selected lang
+let rec=null, isListening=false;
+function startListen(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){ alert('Speech recognition not supported — Chrome recommended'); return; }
+  if(isListening) return;
+  isListening=true;
+  const btn=document.getElementById('speechBtn');
+  if(btn) btn.classList.add('listening');
+  document.getElementById('speechHeard').textContent='Dinliyor...';
+  rec=new SR();
+  rec.lang='tr-TR'; rec.interimResults=false; rec.maxAlternatives=1;
+  rec.onresult=e=>{
+    const heard=e.results[0][0].transcript.trim();
+    document.getElementById('speechHeard').textContent=heard;
+    // offline dictionary lookup via phrases
+    const lower=heard.toLowerCase();
+    let found=phrases.find(p=> p.tr.toLowerCase()===lower);
+    if(!found) found=phrases.find(p=> lower.includes(p.tr.toLowerCase().slice(0,4)));
+    let trans= found? (found[lang]||found.en) : '(Çeviri bulunamadı — tam cümleyi deneyin)';
+    document.getElementById('speechTrans').textContent=trans;
+    if(found) speak(trans, lang);
+  };
+  rec.onerror=()=>{ document.getElementById('speechHeard').textContent='Tekrar deneyin'; };
+  rec.onend=()=>{ isListening=false; const b=document.getElementById('speechBtn'); if(b) b.classList.remove('listening'); };
+  rec.start();
+}
+function stopListen(){
+  if(rec && isListening){ rec.stop(); isListening=false; const b=document.getElementById('speechBtn'); if(b) b.classList.remove('listening'); }
 }
 // Food
 function renderFood(){
@@ -491,7 +579,6 @@ function renderClimate(){
     grid.appendChild(div);
   });
 }
-let lastPlan=null;
 document.addEventListener('DOMContentLoaded',()=>{
   initMap(); renderPlaces(); renderPhrases(); renderHeroPhrases();
   const c=document.getElementById('pInterests');

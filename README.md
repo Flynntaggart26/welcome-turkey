@@ -14,9 +14,10 @@
 - Search + region filter, click card → fly to pin
 - *No photos bundled — use your own, no copyright.*
 
-### 🗣 Phrasebook — 5 Languages, No Copyrighted Audio
-- Categories: Greetings, Transport, Food, Emergency, Shopping (12 phrases)
-- TR → EN/DE/RU/AR (short functional phrases, not copyrightable) + **🔊** button → `Web Speech API` (`tr-TR`, OS voice) — no MP3, no API key
+### 🗣 Phrasebook — 5 Languages, Natural Voice (NEW)
+- **30 phrases** (was 12) — Greetings, Transport, Food, Emergency, Shopping + more (Affedersiniz, Anlamadım, İngilizce biliyor musunuz?, Hesap lütfen, Kayboldum, etc.)
+- TR → EN/DE/RU/AR (short functional phrases, not copyrightable) + **🔊** → `Web Speech API` with **best natural voice** (prefers Google Natural/Premium/Neural, rate 0.92, pitch 1.02) — no MP3, no API key
+- **Conversation Mode:** hold 🎤 → speak Turkish → offline dictionary lookup → speak translation in your language (EN/DE/RU/AR) with natural voice
 
 ### ✈ Planner — Now with PDF & Calendar
 - **Itinerary:** 3/5/7-day templates, interest checkboxes → picks route, total € estimate
