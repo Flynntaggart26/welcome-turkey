@@ -18,13 +18,29 @@
 - Categories: Greetings, Transport, Food, Emergency, Shopping (12 phrases)
 - TR → EN/DE/RU/AR (short functional phrases, not copyrightable) + **🔊** button → `Web Speech API` (`tr-TR`, OS voice) — no MP3, no API key
 
-### ✈ Planner
-- **Itinerary:** 3/5/7-day templates, interest checkboxes (history/nature/beach/food/balloon) → picks route, total € estimate
-- **Budget Calculator:** travelers × days × tier (budget/mid/luxury, avg of 12 places, TRY rate note)
+### ✈ Planner — Now with PDF & Calendar
+- **Itinerary:** 3/5/7-day templates, interest checkboxes → picks route, total € estimate
+- **Export:** `🖨 Print PDF` (print view) + `📅 .ics` (add days to Google/Apple Calendar as VEVENTs)
+- **Budget & Tip:** travelers × days × tier + **💱 tip calculator** (bill TRY → tip % → total TRY + ~€ at 36 TRY/€ offline)
+
+### 🍽 Food & Allergen Guide (NEW)
+- 10 dishes (Baklava, Kebap, Simit, Balık Ekmek, etc.) with original descriptions, price, allergens (nuts/dairy/gluten/meat/fish/sesame)
+- Filter by allergen, `Show to waiter` card generates **“Alerjim var: nuts, dairy — please no …”** TR+EN for staff — offline, printable
+
+### 🧠 Culture Quiz (NEW)
+- 5-question **Do / Don’t** quiz (shoes in mosque, bargaining, tea, tipping, dress). Instant feedback, score, retry — no tracking
+
+### 🚨 SOS Card — Offline Emergency (NEW)
+- Fill name, blood, hotel, contact, embassy, insurance → saved in `localStorage: welcome-sos` (never uploaded)
+- Generates **QR** via `qrcodejs` (MIT) encoding `SOS Name | Blood | Hotel | Contact` + card view for offline show. Data stays on device.
+
+### 📍 Nearest to Me (NEW)
+- Button in Discover → `navigator.geolocation` + haversine to 12 places, shows nearest + distance + flies map to pin. No server.
 
 ### ℹ Essentials
 - Visa (evisa.gov.tr), money (TRY, tipping), etiquette (mosques), emergency 112/155/153, transport, best seasons
-- Legal: Map ODbL, Leaflet BSD, descriptions original, MIT
+- Design: warm Turkish motif (flag red #c03a2b, turquoise, tile pattern), Fraunces headings, soft shadows
+- Legal: Map ODbL, Leaflet BSD, QR MIT, descriptions/phrases original, MIT
 
 ---
 
