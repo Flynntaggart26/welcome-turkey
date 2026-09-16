@@ -128,7 +128,7 @@ function renderPhrases(){
   const activeCat=catEl.dataset.active||'Greetings';
   cats.forEach(c=>{
     const b=document.createElement('button');
-    b.textContent=c; b.style.cssText=`padding:6px 10px;border-radius:999px;border:1px solid #f0dcc3;background:${c===activeCat?'#1e1b4b':'white'};color:${c===activeCat?'white':'#7a819c'};font-weight:700;font-size:12px;cursor:pointer`;
+    b.textContent=c; b.style.cssText=`padding:6px 10px;border-radius:999px;border:1px solid ${c===activeCat?'transparent':'rgba(255,255,255,.12)'};background:${c===activeCat?'linear-gradient(135deg,#f59e0b,#e11d48)':'rgba(255,255,255,.06)'};color:${c===activeCat?'white':'#9aa0c2'};font-weight:700;font-size:12px;cursor:pointer;backdrop-filter:blur(6px)`;
     b.onclick=()=>{catEl.dataset.active=c; renderPhrases();};
     catEl.appendChild(b);
   });
@@ -138,8 +138,10 @@ function renderPhrases(){
   phrases.filter(p=>p.cat===activeCat).forEach(ph=>{
     const txt=lang==='tr'? ph.tr : ph[lang];
     const row=document.createElement('div');
-    row.style.cssText='display:flex;justify-content:space-between;gap:10px;align-items:center;padding:10px;background:white;border:1px solid #f0dcc3;border-radius:12px';
-    row.innerHTML=`<div><b>${ph.tr}</b> <span style="color:#7a819c">→</span> <b style="color:#c03a2b">${txt}</b><div style="font-size:11px;color:#7a819c">${ph.cat}</div></div><button class="btn" onclick="speak('${ph.tr.replace(/'/g,"\\'")}')">🔊</button>`;
+    row.style.cssText='display:flex;justify-content:space-between;gap:10px;align-items:center;padding:12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.10);border-radius:14px;backdrop-filter:blur(8px);transition:.16s';
+    row.onmouseenter=()=> row.style.borderColor='rgba(245,158,11,.22)';
+    row.onmouseleave=()=> row.style.borderColor='rgba(255,255,255,.10)';
+    row.innerHTML=`<div><b style="color:#f1f3ff">${ph.tr}</b> <span style="color:#9aa0c2">→</span> <b style="color:#fde68a">${txt}</b><div style="font-size:11px;color:#9aa0c2">${ph.cat}</div></div><button class="btn" style="background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.10);color:#f1f3ff" onclick="speak('${ph.tr.replace(/'/g,"\\'")}')">🔊</button>`;
     list.appendChild(row);
   });
 }
