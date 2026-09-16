@@ -184,41 +184,72 @@ function renderPhrases(){
   });
 }
 let voices=[];
+let selectedTRVoice=null;
 function loadVoices(){
   voices=speechSynthesis.getVoices();
+  populateTRVoices();
 }
 if('speechSynthesis' in window){
   loadVoices();
   speechSynthesis.onvoiceschanged=loadVoices;
 }
+function populateTRVoices(){
+  const sel=document.getElementById('trVoiceSel');
+  if(!sel || !voices.length) return;
+  const trVoices=voices.filter(v=> v.lang.toLowerCase().startsWith('tr'));
+  if(!trVoices.length) return;
+  const saved=localStorage.getItem('welcome-tr-voice');
+  sel.innerHTML='';
+  trVoices.forEach(v=>{
+    const o=document.createElement('option');
+    o.value=v.name; o.textContent=`${v.name} (${v.lang})${v.default?' — Varsayılan':''}`;
+    if(saved===v.name) o.selected=true;
+    else if(!saved && v.name.includes('Google')) o.selected=true;
+    else if(!saved && v.name.includes('Yelda')) o.selected=true;
+    sel.appendChild(o);
+  });
+  if(sel.value) selectedTRVoice=sel.value;
+  sel.onchange=()=>{ selectedTRVoice=sel.value; localStorage.setItem('welcome-tr-voice', selectedTRVoice); };
+  if(!selectedTRVoice && sel.value) selectedTRVoice=sel.value;
+}
+function testTRVoice(){
+  const sel=document.getElementById('trVoiceSel');
+  if(sel && sel.value) selectedTRVoice=sel.value;
+  speak('Merhaba, Türkiye\'ye hoş geldiniz!', 'tr');
+}
 function getBestVoice(lang){
   if(!voices.length) loadVoices();
-  const pref=['Google','Natural','Premium','Neural','Microsoft','Samantha','Yelda','Emel'];
+  // if Turkish and user selected one, use it
+  if(lang.toLowerCase().startsWith('tr') && selectedTRVoice){
+    const found=voices.find(v=> v.name===selectedTRVoice);
+    if(found) return found;
+  }
+  const pref=['Google','Natural','Premium','Neural','Yelda','Emel','Ayda','Cem','Microsoft'];
   let list=voices.filter(v=> v.lang.toLowerCase().startsWith(lang.toLowerCase().slice(0,2)));
+  if(!list.length) list=voices.filter(v=> v.lang.toLowerCase().includes(lang.toLowerCase().slice(0,2)));
   if(!list.length) list=voices;
-  // prefer natural/premium
   for(let p of pref){
     const f=list.find(v=> v.name.includes(p));
     if(f) return f;
   }
-  // longest name often is most specific, fallback first
   return list[0];
 }
 function speak(text, targetLang){
   if(!('speechSynthesis' in window)) return;
   const u=new SpeechSynthesisUtterance(text);
-  // auto-detect lang if not given: Turkish phrases keep tr-TR, otherwise use selected lang
   const langMap={tr:'tr-TR', en:'en-US', de:'de-DE', ru:'ru-RU', ar:'ar-SA'};
   let useLang='tr-TR';
   if(targetLang && langMap[targetLang]) useLang=langMap[targetLang];
   else if(targetLang) useLang=targetLang;
   u.lang=useLang;
-  u.rate=0.92; u.pitch=1.02; u.volume=1.0;
+  // Turkish: slightly slower, more natural; other langs a bit faster
+  u.rate = useLang.startsWith('tr')? 0.88 : 0.94;
+  u.pitch = useLang.startsWith('tr')? 1.0 : 1.03;
+  u.volume=1.0;
   const v=getBestVoice(useLang);
   if(v) u.voice=v;
   speechSynthesis.cancel();
-  // small delay to let cancel take effect, more natural
-  setTimeout(()=> speechSynthesis.speak(u), 60);
+  setTimeout(()=> speechSynthesis.speak(u), 70);
 }
 function speakWithLang(trText){
   // speak Turkish phrase naturally, then translation in selected lang

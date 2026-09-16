@@ -14,10 +14,11 @@
 - Search + region filter, click card → fly to pin
 - *No photos bundled — use your own, no copyright.*
 
-### 🗣 Phrasebook — 5 Languages, Natural Voice (NEW)
-- **30 phrases** (was 12) — Greetings, Transport, Food, Emergency, Shopping + more (Affedersiniz, Anlamadım, İngilizce biliyor musunuz?, Hesap lütfen, Kayboldum, etc.)
-- TR → EN/DE/RU/AR (short functional phrases, not copyrightable) + **🔊** → `Web Speech API` with **best natural voice** (prefers Google Natural/Premium/Neural, rate 0.92, pitch 1.02) — no MP3, no API key
-- **Conversation Mode:** hold 🎤 → speak Turkish → offline dictionary lookup → speak translation in your language (EN/DE/RU/AR) with natural voice
+### 🗣 Phrasebook — 5 Languages, Natural Turkish Voice (NEW)
+- **30 phrases** — Greetings, Transport, Food, Emergency, Shopping + more (Affedersiniz, Anlamadım, İngilizce biliyor musunuz?, Hesap lütfen, Kayboldum, etc.)
+- TR → EN/DE/RU/AR (short functional phrases, not copyrightable) + **🔊** → `Web Speech API` with **best natural voice per language** — Turkish picks **Yelda / Emel / Google Türkçe** (rate 0.88, pitch 1.0), others Google Natural/Premium/Neural (rate 0.94, pitch 1.03) — no MP3, no API key
+- **Türk sesi seçici:** Phrasebook’ta dropdown ile Türk sesini seç (Yelda, Emel, Google Türkçe), `▶ Dene: Merhaba` ile test et, seçim `localStorage: welcome-tr-voice`’te kalır
+- **Conversation Mode:** hold 🎤 → speak Turkish (`tr-TR` recognition) → offline dictionary (30 phrases) → speak translation in your language with natural voice
 
 ### ✈ Planner — Now with PDF & Calendar
 - **Itinerary:** 3/5/7-day templates, interest checkboxes → picks route, total € estimate
