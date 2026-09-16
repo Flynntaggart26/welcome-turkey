@@ -7,7 +7,7 @@
 <meta name="description" content="Offline travel companion for tourists visiting Türkiye: interactive map, phrasebook in 5 languages, itinerary planner & budget calculator.">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,700&family=Inter:wght@500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="style.css?v=2">
+<link rel="stylesheet" href="style.css?v=3">
 </head>
 <body>
 <header class="header">
@@ -40,6 +40,8 @@
   <button class="nav-btn" data-tab="food" onclick="switchTab('food')">🍽 Food</button>
   <button class="nav-btn" data-tab="phrasebook" onclick="switchTab('phrasebook')">🗣 Phrasebook</button>
   <button class="nav-btn" data-tab="planner" onclick="switchTab('planner')">✈ Planner</button>
+  <button class="nav-btn" data-tab="journal" onclick="switchTab('journal')">📸 Journal</button>
+  <button class="nav-btn" data-tab="safety" onclick="switchTab('safety')">🛡️ Safety</button>
   <button class="nav-btn" data-tab="quiz" onclick="switchTab('quiz')">🧠 Quiz</button>
   <button class="nav-btn" data-tab="sos" onclick="switchTab('sos')">🚨 SOS</button>
   <button class="nav-btn" data-tab="essentials" onclick="switchTab('essentials')">ℹ Essentials</button>
@@ -59,6 +61,16 @@
           <button class="btn" onclick="findNearest()">📍 Nearest to me</button>
         </div>
         <div id="places" style="margin-top:12px;display:grid;gap:10px;max-height:540px;overflow:auto;padding-right:4px"></div>
+      </div>
+      <div class="card" style="margin-top:14px">
+        <h3>🌦 Climate Normals — Offline (MGM 1991-2020, public domain)</h3>
+        <p style="font-size:12px;color:#6b7280">Not live forecast — monthly averages to plan your trip. Public domain, no API.</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px">
+          <select id="climatePlace" class="select" onchange="renderClimate()"></select>
+          <span style="font-size:11px;color:#9aa0c2">Select a place → temp bars</span>
+        </div>
+        <div class="climate-grid" id="climateGrid"></div>
+        <div style="margin-top:8px;font-size:11px;color:#9aa0c2">Source: MGM climate normals (public), original visualization. No live weather API.</div>
       </div>
     </div>
   </section>
@@ -83,6 +95,17 @@
       <p style="font-size:12px;color:#6b7280">Turkish → <span id="targetLang">English</span>. Uses Web Speech API (OS voice), no copyrighted audio.</p>
       <div class="chips" id="catChips" style="margin-top:10px"></div>
       <div id="phrases" style="margin-top:12px;display:grid;gap:8px"></div>
+    </div>
+    <div class="card" style="margin-top:14px">
+      <h3>🗣 Conversation Mode — Hold to Speak</h3>
+      <p style="font-size:12px;color:#6b7280">Hold button, speak Turkish, get instant translation to your language. Offline dictionary (200 words), no API.</p>
+      <div class="speech-box" style="margin-top:10px;display:grid;gap:10px">
+        <div style="display:flex;gap:10px;align-items:center;justify-content:center">
+          <button class="speech-btn" id="speechBtn" onmousedown="startListen()" ontouchstart="startListen()" onmouseup="stopListen()" ontouchend="stopListen()">🎤</button>
+          <div><div id="speechHeard" style="font-weight:700">—</div><div id="speechTrans" style="font-size:13px;color:#f59e0b">Translation appears here</div></div>
+        </div>
+        <div style="font-size:11px;color:#9aa0c2">Hold 🎤, say “Merhaba, teşekkürler, ne kadar?” — uses Web Speech API (tr-TR) + offline dictionary.</div>
+      </div>
     </div>
   </section>
 
@@ -145,6 +168,52 @@
           <div style="font-size:11px;color:#6b7280">TRY ~36/€, ~34/$ — offline estimate. No live rate.</div>
         </div>
       </div>
+      <div class="card" style="margin-top:14px">
+        <h3>🧭 Route Optimizer — TSP (Nearest-Neighbor + 2-opt)</h3>
+        <p style="font-size:12px;color:#6b7280">Select places, optimize for shortest distance. Algorithm is yours: haversine + 2-opt, no Google API.</p>
+        <div id="routePicks" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px"></div>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button class="btn primary" onclick="optimizeRoute()">Optimize route →</button>
+          <button class="btn" onclick="clearRoute()">Clear</button>
+          <span id="routeStats" style="font-size:12px;color:#9aa0c2;align-self:center"></span>
+        </div>
+        <div id="routeOut" style="margin-top:12px"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="journal" class="section">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center">
+        <h3>📸 Travel Journal — Your Photos, Your Story</h3>
+        <div style="display:flex;gap:8px">
+          <button class="btn" onclick="exportJournalJSON()">↗ JSON</button>
+          <button class="btn" onclick="exportJournalPDF()">🖨 PDF</button>
+        </div>
+      </div>
+      <p style="font-size:12px;color:#6b7280">Add daily entry with your own photo (dataURL local only). For university essay, show reflection.</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px">
+        <div class="field"><label>Date</label><input type="date" id="jDate"></div>
+        <div class="field"><label>Place</label><select id="jPlace" class="select"></select></div>
+        <div class="field" style="grid-column:1/-1"><label>Note — what did you feel?</label><textarea id="jNote" rows="2" placeholder="Sunrise balloon was silent except burner..."></textarea></div>
+        <div class="field"><label>Photo — your own only (max 900KB)</label><input type="file" id="jPhoto" accept="image/*"></div>
+        <div class="field"><label>Mood & Cost</label><div style="display:flex;gap:6px"><select id="jMood" class="select"><option>😊 Happy</option><option>🤩 Awed</option><option>😌 Calm</option><option>🤔 Thoughtful</option></select><input id="jCost" type="number" placeholder="TRY" class="select"></div></div>
+      </div>
+      <button class="btn primary" style="margin-top:12px;width:100%" onclick="addJournal()">Add to journal</button>
+      <div id="journalGrid" class="journal-grid" style="margin-top:14px"></div>
+    </div>
+  </section>
+
+  <section id="safety" class="section">
+    <div class="grid2">
+      <div class="card"><h3>⚠️ Scam & Price Radar</h3><p style="font-size:12px;color:#6b7280">Original research: typical price bars. If they charge more, it glows red.</p><div id="scamList" style="margin-top:10px;display:grid;gap:8px"></div></div>
+      <div class="card">
+        <h3>Check a price</h3>
+        <div class="field"><label>Item</label><select id="scamItem" class="select"></select></div>
+        <div class="field" style="margin-top:8px"><label>They ask (TRY)</label><input type="number" id="scamPrice" placeholder="120" class="select"></div>
+        <button class="btn primary" style="margin-top:10px;width:100%" onclick="checkPrice()">Check →</button>
+        <div id="scamOut" style="margin-top:10px;padding:10px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:12px;font-size:13px"></div>
+      </div>
     </div>
   </section>
 
@@ -161,6 +230,14 @@
   </section>
 </main>
 
+<div class="a11y-bar" id="a11yBar">
+  <span style="font-size:12px;font-weight:800;color:#9aa0c2">♿</span>
+  <button id="a11yContrast" onclick="toggleA11y('contrast')">High contrast</button>
+  <button id="a11yLarge" onclick="toggleA11y('large')">Large text</button>
+  <button id="a11yDys" onclick="toggleA11y('dys')">Dyslexic</button>
+  <button id="a11yMotion" onclick="toggleA11y('motion')">Reduce motion</button>
+  <span style="font-size:10px;color:#9aa0c2">A11y Lab — local only</span>
+</div>
 <footer style="max-width:1160px;margin:0 auto;padding:0 20px 24px;color:#8a8aa0;font-size:11px;text-align:center">Welcome Turkey • Offline-first • Leaflet OSM • Web Speech API • MIT</footer>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>

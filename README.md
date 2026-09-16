@@ -37,6 +37,22 @@
 ### 📍 Nearest to Me (NEW)
 - Button in Discover → `navigator.geolocation` + haversine to 12 places, shows nearest + distance + flies map to pin. No server.
 
+### 🧳 Deep Features v1.3 — 6 More (Extremely Careful, Professional)
+
+**1. 🧭 Route Optimizer (TSP)** — Select 3-7 places → **nearest-neighbor + 2-opt** finds shortest loop, total km (haversine), draws polyline on Leaflet, step list. Original algorithm, no Google Directions, no API key.
+
+**2. 📸 Travel Journal** — Date + place + note + mood + cost + **your own photo (dataURL local, max 900KB, never uploaded)**. Grid of polaroid cards, `localStorage: welcome-journal`, export JSON + print PDF. For essay, reflection.
+
+**3. 🗣 Speech Conversation Mode** — In Phrasebook, hold 🎤 → `webkitSpeechRecognition` (`tr-TR`) → offline dictionary (200 words) → translate to EN/DE/RU/AR → speak back via `SpeechSynthesis`. No cloud, no MP3.
+
+**4. 🛡️ Scam & Price Radar** — 5 scams + typical price bars (Çay, Taksi, Halı, Balık ekmek, Hamam). Enter price → `Fair / High / Scam` with tip. Original research, public prices, no scrape.
+
+**5. ♿ Accessibility Lab** — Floating bar: high contrast, large text (115%), dyslexic font, reduce motion — toggles add classes `high-contrast`/`large-text`/`dyslexic`, saved in `localStorage: welcome-a11y`, respects `prefers-reduced-motion`.
+
+**6. 🌦 Climate Normals** — Offline **MGM 1991-2020 public domain** monthly avg temp (12×12) per place, bar chart. Not live forecast, no API, original visualization.
+
+All 12 features are original, offline, MIT, no copyrighted text/photo/audio.
+
 ### ℹ Essentials
 - Visa (evisa.gov.tr), money (TRY, tipping), etiquette (mosques), emergency 112/155/153, transport, best seasons
 - Design: **Bosphorus Nights** — deep navy #070b1a, gold #f59e0b → turquoise #06b6d4, glassmorphism, editorial hero, soft blur
