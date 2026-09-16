@@ -37,8 +37,11 @@
 
 <nav class="nav">
   <button class="nav-btn active" data-tab="discover" onclick="switchTab('discover')">🗺 Discover</button>
+  <button class="nav-btn" data-tab="food" onclick="switchTab('food')">🍽 Food</button>
   <button class="nav-btn" data-tab="phrasebook" onclick="switchTab('phrasebook')">🗣 Phrasebook</button>
   <button class="nav-btn" data-tab="planner" onclick="switchTab('planner')">✈ Planner</button>
+  <button class="nav-btn" data-tab="quiz" onclick="switchTab('quiz')">🧠 Quiz</button>
+  <button class="nav-btn" data-tab="sos" onclick="switchTab('sos')">🚨 SOS</button>
   <button class="nav-btn" data-tab="essentials" onclick="switchTab('essentials')">ℹ Essentials</button>
 </nav>
 
@@ -53,8 +56,23 @@
         <div class="filters">
           <input id="q" placeholder="Search Istanbul, beach..." oninput="renderPlaces()" style="flex:1;padding:10px 12px;border-radius:999px;border:1px solid #e6e7ef">
           <select id="fRegion" onchange="renderPlaces()" class="select"><option value="all">All regions</option><option>Marmara</option><option>Central</option><option>Aegean</option><option>Mediterranean</option><option>Black Sea</option><option>Eastern</option></select>
+          <button class="btn" onclick="findNearest()">📍 Nearest to me</button>
         </div>
         <div id="places" style="margin-top:12px;display:grid;gap:10px;max-height:540px;overflow:auto;padding-right:4px"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="food" class="section">
+    <div class="card">
+      <h3>🍽 Food & Allergen Guide</h3>
+      <p style="font-size:12px;color:#6b7280">Tap allergen to filter. Show the Turkish card to the waiter. All descriptions original.</p>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px" id="allergenChips"></div>
+      <div class="food-grid" id="foodGrid" style="margin-top:12px"></div>
+      <div class="card" style="margin-top:12px;background:#f0f9ff;border:1px solid #cbd5e1">
+        <h4 style="font-size:13px">Show to waiter — Alerjim var</h4>
+        <div id="allergyCard" style="margin-top:8px;padding:10px;background:white;border:1px solid #e6e7ef;border-radius:10px;font-size:13px">Select allergens above to generate card.</div>
+        <button class="btn" style="margin-top:8px" onclick="window.print()">🖨 Print card</button>
       </div>
     </div>
   </section>
@@ -68,6 +86,32 @@
     </div>
   </section>
 
+  <section id="quiz" class="section">
+    <div class="card">
+      <h3>🧠 Culture Do / Don't — 5-Question Quiz</h3>
+      <p style="font-size:12px;color:#6b7280">Test your etiquette. No tracking, instant feedback.</p>
+      <div id="quizArea" style="margin-top:12px"></div>
+      <div id="quizResult" style="margin-top:12px;display:none;padding:12px;background:#f0fdf4;border:1px solid #a7f3d0;border-radius:12px"></div>
+    </div>
+  </section>
+
+  <section id="sos" class="section">
+    <div class="card sos-card">
+      <h3>🚨 SOS Card — Offline Emergency</h3>
+      <p style="font-size:12px;color:#6b7280">Fill once, save locally. Shows QR + card even without internet. Data never leaves your phone.</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px">
+        <div class="field"><label>Full name</label><input id="sosName" placeholder="Anna Smith"></div>
+        <div class="field"><label>Blood type / Allergies</label><input id="sosBlood" placeholder="A+, peanut"></div>
+        <div class="field"><label>Hotel & address</label><input id="sosHotel" placeholder="Romance Hotel, Sultanahmet"></div>
+        <div class="field"><label>Emergency contact</label><input id="sosContact" placeholder="+49 ..."></div>
+        <div class="field"><label>Embassy phone</label><input id="sosEmbassy" placeholder="+90 312 ..."></div>
+        <div class="field"><label>Insurance no.</label><input id="sosInsurance" placeholder="..."></div>
+      </div>
+      <button class="btn primary" style="margin-top:12px;width:100%" onclick="saveSOS()">Save SOS card (local)</button>
+      <div id="sosOut" style="margin-top:12px"></div>
+    </div>
+  </section>
+
   <section id="planner" class="section">
     <div class="grid2">
       <div class="card">
@@ -77,15 +121,29 @@
         <div class="field" style="margin-top:10px"><label>Budget tier</label><select id="pBudget" class="select"><option value="budget">Budget (€50/day)</option><option value="mid" selected>Mid (€90/day)</option><option value="lux">Luxury (€180/day)</option></select></div>
         <button class="btn primary" style="margin-top:12px;width:100%" onclick="generatePlan()">Generate plan →</button>
         <div id="planOut" style="margin-top:12px"></div>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button class="btn" onclick="exportPlanPDF()">🖨 Print PDF</button>
+          <button class="btn" onclick="exportPlanICS()">📅 .ics Calendar</button>
+        </div>
       </div>
       <div class="card">
-        <h3>Budget Calculator</h3>
+        <h3>Budget & Tip Calculator</h3>
         <div class="field"><label>Travelers</label><input type="number" id="bTrav" value="2" min="1" class="select"></div>
         <div class="field" style="margin-top:8px"><label>Days</label><input type="number" id="bDays" value="5" min="1" class="select"></div>
         <div class="field" style="margin-top:8px"><label>Hotel tier</label><select id="bTier" class="select"><option value="budget">Budget</option><option value="mid" selected>Mid</option><option value="lux">Luxury</option></select></div>
         <button class="btn" style="margin-top:12px;width:100%" onclick="calcBudget()">Calculate</button>
         <div id="budgetOut" style="margin-top:12px;padding:10px;background:#f8f9ff;border:1px solid #e6e7ef;border-radius:12px;font-size:13px"></div>
         <div style="margin-top:8px;font-size:11px;color:#6b7280">Estimates only — TRY rate fluctuates. Sources: local averages, not live booking.</div>
+        <div style="margin-top:14px;border-top:1px solid #f0dcc3;padding-top:12px">
+          <h4 style="font-size:13px">💱 Currency & Tip</h4>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
+            <div class="field"><label>Bill (TRY)</label><input type="number" id="tipBill" placeholder="250" class="select"></div>
+            <div class="field"><label>Tip %</label><select id="tipPct" class="select"><option value="5">5%</option><option value="10" selected>10%</option><option value="15">15%</option></select></div>
+          </div>
+          <button class="btn" style="margin-top:8px;width:100%" onclick="calcTip()">Calculate total</button>
+          <div id="tipOut" style="margin-top:8px;font-size:13px"></div>
+          <div style="font-size:11px;color:#6b7280">TRY ~36/€, ~34/$ — offline estimate. No live rate.</div>
+        </div>
       </div>
     </div>
   </section>
@@ -105,6 +163,7 @@
 
 <footer style="max-width:1160px;margin:0 auto;padding:0 20px 24px;color:#8a8aa0;font-size:11px;text-align:center">Welcome Turkey • Offline-first • Leaflet OSM • Web Speech API • MIT</footer>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

@@ -27,6 +27,29 @@ const phrases=[
   {tr:'İndirim yapar mısınız?', en:'Discount?', de:'Rabatt?', ru:'Скидка?', ar:'خصم؟', cat:'Shopping'},
   {tr:'Çok güzel!', en:'Very beautiful!', de:'Sehr schön!', ru:'Очень красиво!', ar:'جميل جدا!', cat:'Greetings'},
 ];
+const foodData=[
+  {name:'Baklava', region:'Gaziantep', desc:'Layers of phyllo with pistachio and syrup.', allergens:['nuts','gluten','dairy'], price:'80-120 TRY'},
+  {name:'Kebap (Adana)', region:'Eastern', desc:'Spicy minced meat grilled.', allergens:['meat'], price:'200-300 TRY'},
+  {name:'Lahmacun', region:'Central', desc:'Thin flatbread topped with minced meat.', allergens:['gluten','meat'], price:'60-90 TRY'},
+  {name:'Mantı', region:'Central', desc:'Tiny dumplings with yogurt.', allergens:['gluten','dairy'], price:'120-180 TRY'},
+  {name:'Simit', region:'Marmara', desc:'Sesame ring bread, street favorite.', allergens:['gluten','sesame'], price:'15-25 TRY'},
+  {name:'Balık Ekmek', region:'Marmara', desc:'Grilled fish in bread at Eminönü.', allergens:['fish','gluten'], price:'100-150 TRY'},
+  {name:'Mercimek Çorbası', region:'All', desc:'Red lentil soup, everyday staple.', allergens:[], price:'50-80 TRY'},
+  {name:'Künefe', region:'Mediterranean', desc:'Cheese pastry with syrup.', allergens:['nuts','dairy','gluten'], price:'90-140 TRY'},
+  {name:'Çiğ Köfte', region:'Eastern', desc:'Bulgur balls, vegan, spicy.', allergens:['gluten'], price:'60-90 TRY'},
+  {name:'Meze', region:'Aegean', desc:'Small plates: hummus, ezme, etc.', allergens:['nuts','dairy'], price:'150-250 TRY'},
+];
+const allergens=['nuts','dairy','gluten','meat','fish','sesame'];
+const quizData=[
+  {q:'Shoes in a mosque?', opts:['Keep them on','Take them off','Only socks matter'], a:1, exp:'Take shoes off, scarves provided for covering.'},
+  {q:'Bargain in bazaar?', opts:['Never','Yes, expected','Only with tourists'], a:1, exp:'Bargain in bazaars, not in malls.'},
+  {q:'Tea offered in a shop?', opts:['Must pay','Hospitality — accept, no obligation','Rude to accept'], a:1, exp:'Tea is hospitality, not sales.'},
+  {q:'Tipping in restaurants?', opts:['Never','5-10% if no service charge','20% always'], a:1, exp:'5-10% if service not included.'},
+  {q:'Shoulders/knees in mosque?', opts:['No matter','Cover them'], a:1, exp:'Cover shoulders and knees.'},
+];
+let selectedAllergens=new Set();
+let quizIdx=0, quizScore=0;
+let lastPlan=null;
 
 function switchTab(id){
   document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
@@ -34,6 +57,8 @@ function switchTab(id){
   document.getElementById(id).classList.add('active');
   document.querySelector(`[data-tab="${id}"]`).classList.add('active');
   if(id==='discover') setTimeout(()=> map.invalidateSize(), 120);
+  if(id==='food') renderFood();
+  if(id==='quiz') renderQuiz();
 }
 function setLang(v){ lang=v; document.getElementById('targetLang').textContent={en:'English',de:'German',ru:'Russian',ar:'Arabic',tr:'Turkish'}[v]; renderPhrases(); renderHeroPhrases(); }
 
@@ -57,11 +82,30 @@ function renderPlaces(){
     return true;
   }).forEach(p=>{
     const div=document.createElement('div');
-    div.style.cssText='background:white;border:1px solid #f0e0cc;border-radius:14px;padding:12px;cursor:pointer';
-    div.innerHTML=`<div style="display:flex;justify-content:space-between;gap:8px"><b>${p.name}</b><span style="font-size:10px;padding:3px 7px;border-radius:999px;background:#f0e0cc;font-weight:700">${p.region}</span></div><div style="font-size:12px;color:#4b5563">${p.desc}</div><div style="font-size:11px;color:#6b7280;margin-top:4px">${p.best} • Mid €${p.budget.mid}/day • ${p.tip}</div>`;
-    div.onclick=()=>{ map.setView([p.lat,p.lon], 8); p._marker.openPopup(); window.scrollTo({top:0,behavior:'smooth'}); };
+    div.style.cssText='background:white;border:1px solid #f0dcc3;border-radius:14px;padding:12px;cursor:pointer;transition:.16s';
+    div.innerHTML=`<div style="display:flex;justify-content:space-between;gap:8px"><b>${p.name}</b><span style="font-size:10px;padding:3px 7px;border-radius:999px;background:#fdf2e6;font-weight:700">${p.region}</span></div><div style="font-size:12px;color:#4b5563">${p.desc}</div><div style="font-size:11px;color:#6b7280;margin-top:4px">${p.best} • Mid €${p.budget.mid}/day • ${p.tip}</div>`;
+    div.onclick=()=>{ map.setView([p.lat,p.lon], 8); p._marker.openPopup(); };
+    div.onmouseenter=()=> div.style.transform='translateY(-1px)';
+    div.onmouseleave=()=> div.style.transform='none';
     el.appendChild(div);
   });
+}
+function findNearest(){
+  if(!navigator.geolocation){ alert('Geolocation not supported'); return; }
+  navigator.geolocation.getCurrentPosition(pos=>{
+    const {latitude, longitude}=pos.coords;
+    const hav=(lat1,lon1,lat2,lon2)=>{
+      const R=6371, dLat=(lat2-lat1)*Math.PI/180, dLon=(lon2-lon1)*Math.PI/180;
+      const a=Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
+      return R*2*Math.asin(Math.sqrt(a));
+    };
+    let best=null, bestD=Infinity;
+    places.forEach(p=>{ const d=hav(latitude,longitude,p.lat,p.lon); if(d<bestD){bestD=d; best=p;} });
+    if(best){
+      alert(`Nearest: ${best.name} — ${bestD.toFixed(0)} km away`);
+      map.setView([best.lat,best.lon], 8); best._marker.openPopup();
+    }
+  }, ()=> alert('Enable location permission to use nearest.'));
 }
 function renderHeroPhrases(){
   const el=document.getElementById('heroPhrases');
@@ -71,7 +115,7 @@ function renderHeroPhrases(){
     const txt=lang==='tr'? ph.tr : ph[lang];
     const div=document.createElement('button');
     div.className='chip';
-    div.style.cssText='background:white;color:#1a1c2e;border:1px solid #f0e0cc;cursor:pointer';
+    div.style.cssText='background:white;color:#1e1b4b;border:1px solid #f0dcc3;cursor:pointer';
     div.textContent=`${ph.tr} → ${txt}`;
     div.onclick=()=> speak(ph.tr);
     el.appendChild(div);
@@ -84,7 +128,7 @@ function renderPhrases(){
   const activeCat=catEl.dataset.active||'Greetings';
   cats.forEach(c=>{
     const b=document.createElement('button');
-    b.textContent=c; b.style.cssText=`padding:6px 10px;border-radius:999px;border:1px solid #f0e0cc;background:${c===activeCat?'#1a1c2e':'white'};color:${c===activeCat?'white':'#7a819c'};font-weight:700;font-size:12px;cursor:pointer`;
+    b.textContent=c; b.style.cssText=`padding:6px 10px;border-radius:999px;border:1px solid #f0dcc3;background:${c===activeCat?'#1e1b4b':'white'};color:${c===activeCat?'white':'#7a819c'};font-weight:700;font-size:12px;cursor:pointer`;
     b.onclick=()=>{catEl.dataset.active=c; renderPhrases();};
     catEl.appendChild(b);
   });
@@ -94,8 +138,8 @@ function renderPhrases(){
   phrases.filter(p=>p.cat===activeCat).forEach(ph=>{
     const txt=lang==='tr'? ph.tr : ph[lang];
     const row=document.createElement('div');
-    row.style.cssText='display:flex;justify-content:space-between;gap:10px;align-items:center;padding:10px;background:white;border:1px solid #f0e0cc;border-radius:12px';
-    row.innerHTML=`<div><b>${ph.tr}</b> <span style="color:#6b7280">→</span> <b style="color:#e11d48">${txt}</b><div style="font-size:11px;color:#6b7280">${ph.cat}</div></div><button class="btn" onclick="speak('${ph.tr.replace(/'/g,"\\'")}')">🔊</button>`;
+    row.style.cssText='display:flex;justify-content:space-between;gap:10px;align-items:center;padding:10px;background:white;border:1px solid #f0dcc3;border-radius:12px';
+    row.innerHTML=`<div><b>${ph.tr}</b> <span style="color:#7a819c">→</span> <b style="color:#c03a2b">${txt}</b><div style="font-size:11px;color:#7a819c">${ph.cat}</div></div><button class="btn" onclick="speak('${ph.tr.replace(/'/g,"\\'")}')">🔊</button>`;
     list.appendChild(row);
   });
 }
@@ -105,15 +149,110 @@ function speak(text){
   u.lang='tr-TR'; u.rate=0.9;
   speechSynthesis.cancel(); speechSynthesis.speak(u);
 }
+// Food
+function renderFood(){
+  const grid=document.getElementById('foodGrid');
+  const chips=document.getElementById('allergenChips');
+  chips.innerHTML='';
+  allergens.forEach(a=>{
+    const b=document.createElement('button');
+    const active=selectedAllergens.has(a);
+    b.textContent=a;
+    b.style.cssText=`padding:6px 10px;border-radius:999px;border:1px solid ${active?'#c03a2b':'#f0dcc3'};background:${active?'#c03a2b':'white'};color:${active?'white':'#7a819c'};font-weight:700;font-size:12px;cursor:pointer`;
+    b.onclick=()=>{ if(active) selectedAllergens.delete(a); else selectedAllergens.add(a); renderFood(); updateAllergyCard(); };
+    chips.appendChild(b);
+  });
+  grid.innerHTML='';
+  foodData.filter(f=>{
+    if(selectedAllergens.size===0) return true;
+    return ![...selectedAllergens].some(al=> f.allergens.includes(al));
+  }).forEach(f=>{
+    const div=document.createElement('div');
+    div.className='food-card';
+    div.innerHTML=`<b>${f.name}</b> <span style="font-size:11px;color:#7a819c">• ${f.region}</span><div style="font-size:12px;color:#4b5563;margin-top:4px">${f.desc}</div><div style="font-size:11px;margin-top:4px">${f.allergens.length? '⚠️ '+f.allergens.join(', ') : '✅ No major allergens'}</div><div style="font-size:11px;color:#0e7490;font-weight:700">${f.price}</div>`;
+    grid.appendChild(div);
+  });
+  if(!grid.children.length) grid.innerHTML='<div style="color:#7a819c">No dishes without selected allergens.</div>';
+}
+function updateAllergyCard(){
+  const el=document.getElementById('allergyCard');
+  if(selectedAllergens.size===0){ el.textContent='Select allergens above to generate card.'; return; }
+  const list=[...selectedAllergens].join(', ');
+  el.innerHTML=`<b>⚠️ Alerjim var:</b> ${list}<br><span style="font-size:12px">Lütfen yemeğimde <b>${list}</b> olmasın. Teşekkürler!</span><br><span style="font-size:11px;color:#7a819c">I have allergy to ${list} — please no ${list}.</span>`;
+}
+// Quiz
+function renderQuiz(){
+  const area=document.getElementById('quizArea');
+  const res=document.getElementById('quizResult');
+  res.style.display='none';
+  quizIdx=0; quizScore=0;
+  showQuizQ();
+}
+function showQuizQ(){
+  const q=quizData[quizIdx];
+  const area=document.getElementById('quizArea');
+  area.innerHTML=`<div style="font-weight:700">${quizIdx+1}/5 — ${q.q}</div><div style="margin-top:10px;display:grid;gap:8px">${q.opts.map((o,i)=>`<button class="quiz-opt" onclick="checkQuiz(${i})">${o}</button>`).join('')}</div>`;
+}
+function checkQuiz(i){
+  const q=quizData[quizIdx];
+  const correct=i===q.a;
+  if(correct) quizScore++;
+  const area=document.getElementById('quizArea');
+  area.innerHTML=`<div style="font-weight:700">${quizIdx+1}/5 — ${q.q}</div><div style="margin-top:8px;padding:10px;border-radius:10px;background:${correct?'#ecfdf5':'#fef2f2'};border:1px solid ${correct?'#a7f3d0':'#fecaca'}">${correct?'✅ Correct!':'❌ Wrong.'} ${q.exp}</div><button class="btn primary" style="margin-top:10px" onclick="nextQuiz()">${quizIdx<4?'Next →':'See result'}</button>`;
+}
+function nextQuiz(){
+  quizIdx++;
+  if(quizIdx<5) showQuizQ();
+  else {
+    const res=document.getElementById('quizResult');
+    res.style.display='block';
+    res.innerHTML=`<b>Score: ${quizScore}/5</b> — ${quizScore>=4?'Excellent! You know Turkish etiquette.':'Keep practicing — check Essentials.'}<div style="margin-top:8px"><button class="btn" onclick="renderQuiz()">Retry</button></div>`;
+    document.getElementById('quizArea').innerHTML='';
+  }
+}
+// SOS
+function saveSOS(){
+  const data={name:document.getElementById('sosName').value, blood:document.getElementById('sosBlood').value, hotel:document.getElementById('sosHotel').value, contact:document.getElementById('sosContact').value, embassy:document.getElementById('sosEmbassy').value, insurance:document.getElementById('sosInsurance').value};
+  localStorage.setItem('welcome-sos', JSON.stringify(data));
+  renderSOS();
+}
+function renderSOS(){
+  const data=JSON.parse(localStorage.getItem('welcome-sos')||'null');
+  const out=document.getElementById('sosOut');
+  if(!data||!data.name){ out.innerHTML='<div style="font-size:12px;color:#7a819c">Fill and save to generate QR card.</div>'; return; }
+  out.innerHTML=`<div style="margin-top:10px;padding:14px;background:white;border:1px solid #f0dcc3;border-radius:12px;display:flex;gap:12px;flex-wrap:wrap">
+    <div style="flex:1;min-width:200px"><b>${data.name}</b><div style="font-size:12px;color:#4b5563">Blood: ${data.blood||'—'} • Hotel: ${data.hotel||'—'}</div><div style="font-size:11px;color:#7a819c">Contact: ${data.contact||'—'} • Embassy: ${data.embassy||'—'} • Insurance: ${data.insurance||'—'}</div><div style="font-size:10px;color:#7a819c;margin-top:6px">Show this offline. Data stays in your browser (localStorage).</div></div>
+    <div id="sosQr" style="width:96px;height:96px;background:white;border:1px solid #f0dcc3;border-radius:8px;display:grid;place-items:center"></div>
+  </div>`;
+  setTimeout(()=>{
+    const el=document.getElementById('sosQr');
+    if(!el) return;
+    el.innerHTML='';
+    const text=`SOS ${data.name} | Blood:${data.blood} | Hotel:${data.hotel} | Contact:${data.contact}`;
+    try{ new QRCode(el, {text, width:88, height:88, colorDark:'#1e1b4b', colorLight:'#ffffff', correctLevel: QRCode.CorrectLevel.M}); }catch(e){}
+  }, 80);
+}
 function generatePlan(){
   const days=parseInt(document.getElementById('pDays').value);
   const budget=document.getElementById('pBudget').value;
   const interests=[...document.querySelectorAll('#pInterests input:checked')].map(c=>c.value);
-  const pool=places.filter(p=> interests.length===0 || interests.some(i=> p.highlights.join(' ').toLowerCase().includes(i) || p.desc.toLowerCase().includes(i)));
   const picks=days===3? ['ist','cap','ist'] : days===5? ['ist','cap','ant','izm','ist'] : ['ist','ank','cap','ant','fet','izm','ist'];
-  const plan=picks.slice(0,days).map(id=> places.find(p=>p.id===id) || pool[0]);
+  const plan=picks.slice(0,days).map(id=> places.find(p=>p.id===id));
+  lastPlan=plan;
   const total=plan.reduce((a,p)=>a+p.budget[budget],0);
   document.getElementById('planOut').innerHTML=`<div style="margin-top:10px;padding:12px;background:#f0f9ff;border:1px solid #cbd5e1;border-radius:12px"><b>${days}-day plan • ~€${total} (mid, per person, no flights)</b><ol style="margin:8px 0 0 18px;font-size:13px">${plan.map((p,i)=>`<li><b>Day ${i+1}: ${p.name}</b> — ${p.desc} <span style="color:#6b7280">(${p.highlights.join(', ')})</span></li>`).join('')}</ol></div>`;
+}
+function exportPlanPDF(){ if(!lastPlan){ alert('Generate a plan first'); return; } window.print(); }
+function exportPlanICS(){
+  if(!lastPlan){ alert('Generate a plan first'); return; }
+  let ics='BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//Welcome Turkey//EN\n';
+  lastPlan.forEach((p,i)=>{
+    const d=new Date(); d.setDate(d.getDate()+i);
+    const y=d.toISOString().slice(0,10).replace(/-/g,'');
+    ics+=`BEGIN:VEVENT\nDTSTART:${y}T080000Z\n DTEND:${y}T200000Z\nSUMMARY:${p.name}\nDESCRIPTION:${p.desc.replace(/,/g,' ')}\nEND:VEVENT\n`;
+  });
+  ics+='END:VCALENDAR';
+  const blob=new Blob([ics],{type:'text/calendar'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='turkey_itinerary.ics'; a.click(); URL.revokeObjectURL(url);
 }
 function calcBudget(){
   const trav=parseInt(document.getElementById('bTrav').value)||1;
@@ -123,16 +262,25 @@ function calcBudget(){
   const total=Math.round(avg*days*trav);
   document.getElementById('budgetOut').innerHTML=`<b>Estimate: €${total}</b> for ${trav} traveler(s) × ${days} days (${tier})<br><span style="font-size:11px;color:#6b7280">Avg €${avg.toFixed(0)}/day per person • Flights extra • Rate ~TRY 36/€</span>`;
 }
-// interests checkboxes
-const interests=['history','nature','beach','food','balloon'];
+function calcTip(){
+  const bill=parseFloat(document.getElementById('tipBill').value)||0;
+  const pct=parseInt(document.getElementById('tipPct').value)||10;
+  const tip=bill*pct/100;
+  const total=bill+tip;
+  const eur=(total/36).toFixed(1);
+  document.getElementById('tipOut').innerHTML=`Tip ${pct}%: <b>${tip.toFixed(2)} TRY</b> • Total: <b>${total.toFixed(2)} TRY</b> (~€${eur})`;
+}
 document.addEventListener('DOMContentLoaded',()=>{
   initMap(); renderPlaces(); renderPhrases(); renderHeroPhrases();
   const c=document.getElementById('pInterests');
-  interests.forEach(i=>{
+  ['history','nature','beach','food','balloon'].forEach(i=>{
     const label=document.createElement('label');
-    label.style.cssText='font-size:12px;display:flex;gap:4px;align-items:center;background:white;border:1px solid #f0e0cc;padding:6px 10px;border-radius:999px;cursor:pointer';
+    label.style.cssText='font-size:12px;display:flex;gap:4px;align-items:center;background:white;border:1px solid #f0dcc3;padding:6px 10px;border-radius:999px;cursor:pointer';
     label.innerHTML=`<input type="checkbox" value="${i}"> ${i}`;
     c.appendChild(label);
   });
-  calcBudget();
+  renderFood(); renderQuiz(); renderSOS(); calcBudget();
+  // load SOS fields
+  const s=JSON.parse(localStorage.getItem('welcome-sos')||'null');
+  if(s){ document.getElementById('sosName').value=s.name||''; document.getElementById('sosBlood').value=s.blood||''; document.getElementById('sosHotel').value=s.hotel||''; document.getElementById('sosContact').value=s.contact||''; document.getElementById('sosEmbassy').value=s.embassy||''; document.getElementById('sosInsurance').value=s.insurance||''; }
 });
